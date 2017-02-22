@@ -6,6 +6,10 @@
 #include <cstring>
 #include <algorithm>
 #include <iostream>
+#include <thread>
+#include <unistd.h>
+
+#define NB_THREADS 8
 
 struct greater
 {
@@ -34,7 +38,7 @@ uint64_t seed_from_hash(const char *previous_hash, uint64_t nonce) {
 
 
 extern "C" {
-  int solve(const char * previous_hash, int nb_elements, const unsigned char *prefix, int prefix_len, bool asc, unsigned char *winning_hash) {
+  int solve_single(const char * previous_hash, int nb_elements, const unsigned char *prefix, int prefix_len, bool asc, unsigned char *winning_hash, bool *done, uint64_t *found_nonce) {
     std::mt19937_64 prng;
     int nonce = rand() & 134217727;
     uint64_t seed;
@@ -48,7 +52,7 @@ extern "C" {
 
     elements.resize(nb_elements);
 
-    while(true) {
+    while(!*done) {
       seed = seed_from_hash(previous_hash, nonce);
 
       prng.seed(seed);
@@ -74,7 +78,12 @@ extern "C" {
       SHA256_Final(hash, &sha256);
 
       if(memcmp(prefix, hash, prefix_len) == 0) {
-        memcpy(winning_hash, hash, SHA256_DIGEST_LENGTH);
+        if(!*done) {
+          *done = true;
+          *found_nonce = nonce;
+          memcpy(winning_hash, hash, SHA256_DIGEST_LENGTH);
+        }
+
         return nonce;
       }
 
@@ -83,11 +92,23 @@ extern "C" {
 
   }
 
-}
+  int solve(const char * previous_hash, int nb_elements, const unsigned char *prefix, int prefix_len, bool asc, unsigned char *winning_hash) {
+    std::thread threads[NB_THREADS];
+    bool done = false;
+    uint64_t nonce;
 
+    for(int i = 0; i < NB_THREADS; i++) {
+      threads[i] = std::thread(solve_single, previous_hash, nb_elements, prefix, prefix_len, asc, winning_hash, &done, &nonce);
+    }
 
+    while(!done) {
+      usleep(1);
+    }
 
+    for(int i = 0; i < NB_THREADS; i++) {
+      threads[i].join();
+    }
 
-int main() {
-  return 3;
+    return nonce;
+  }
 }
