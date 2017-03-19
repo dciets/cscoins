@@ -8,8 +8,8 @@ from coinslib import Challenge
 
 
 class MinerClient(BaseClient):
-    def __init__(self, key_dirs="", hostname="localhost"):
-        BaseClient.__init__(self, hostname)
+    def __init__(self, key_dirs="", hostname="localhost", port=8989, ssl=False):
+        BaseClient.__init__(self, hostname, port, ssl)
         self.keys_dir = key_dirs
         self.time_limit = 0
         self.solvers = []
