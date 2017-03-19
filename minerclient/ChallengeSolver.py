@@ -4,7 +4,8 @@ import random
 import ctypes
 import binascii
 
-nativeSolve = ctypes.cdll.LoadLibrary('./solve.so').solve
+solve_lib = ctypes.cdll.LoadLibrary('./solve.so')
+native_solve_sorted_list = solve_lib.solve_sorted_list
 
 class ChallengeSolver:
     def __init__(self, challenge_name):
@@ -39,12 +40,12 @@ class SortedListSolverNative(ChallengeSolver):
         prefix_len = len(prefix)
 
         output = ctypes.create_string_buffer(32)
-        nonce = nativeSolve(ctypes.c_char_p(bytes(previous_hash, 'ascii')),
-                            nb_elements,
-                            ctypes.c_char_p(prefix),
-                            prefix_len,
-                            self.asc,
-                            output)
+        nonce = native_solve_sorted_list(ctypes.c_char_p(bytes(previous_hash, 'ascii')),
+                                         nb_elements,
+                                         ctypes.c_char_p(prefix),
+                                         prefix_len,
+                                         self.asc,
+                                         output)
 
         return str(binascii.hexlify((output).raw)), nonce
 

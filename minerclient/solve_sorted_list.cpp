@@ -38,7 +38,7 @@ uint64_t seed_from_hash(const char *previous_hash, uint64_t nonce) {
 
 
 extern "C" {
-  int solve_single(const char * previous_hash, int nb_elements, const unsigned char *prefix, int prefix_len, bool asc, unsigned char *winning_hash, bool *done, uint64_t *found_nonce) {
+  int solve_sorted_list_single(const char * previous_hash, int nb_elements, const unsigned char *prefix, int prefix_len, bool asc, unsigned char *winning_hash, bool *done, uint64_t *found_nonce) {
     std::mt19937_64 prng;
     int nonce = rand() & 134217727;
     uint64_t seed;
@@ -92,13 +92,13 @@ extern "C" {
 
   }
 
-  int solve(const char * previous_hash, int nb_elements, const unsigned char *prefix, int prefix_len, bool asc, unsigned char *winning_hash) {
+  int solve_sorted_list(const char * previous_hash, int nb_elements, const unsigned char *prefix, int prefix_len, bool asc, unsigned char *winning_hash) {
     std::thread threads[NB_THREADS];
     bool done = false;
     uint64_t nonce;
 
     for(int i = 0; i < NB_THREADS; i++) {
-      threads[i] = std::thread(solve_single, previous_hash, nb_elements, prefix, prefix_len, asc, winning_hash, &done, &nonce);
+      threads[i] = std::thread(solve_sorted_list_single, previous_hash, nb_elements, prefix, prefix_len, asc, winning_hash, &done, &nonce);
     }
 
     while(!done) {
