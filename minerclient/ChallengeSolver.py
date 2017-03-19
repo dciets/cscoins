@@ -6,6 +6,7 @@ import binascii
 
 solve_lib = ctypes.cdll.LoadLibrary('./solve.so')
 native_solve_sorted_list = solve_lib.solve_sorted_list
+native_sort_shortest_path = solve_lib.solve_shortest_path
 
 class ChallengeSolver:
     def __init__(self, challenge_name):
@@ -49,6 +50,24 @@ class SortedListSolverNative(ChallengeSolver):
 
         return str(binascii.hexlify((output).raw)), nonce
 
+class ShortestPathSolverNative(ChallengeSolver):
+    def __init__(self):
+        ChallengeSolver.__init__(self, 'shortest_path')
+
+    def solve(self, parameters, hash_prefix, previous_hash):
+        grid_size = parameters['grid_size']
+        nb_blockers = parameters['nb_blockers']
+        prefix = bytes.fromhex(hash_prefix)
+        prefix_len = len(prefix)
+        output = ctypes.create_string_buffer(32)
+        nonce = native_sort_shortest_path(grid_size,
+                                          nb_blockers,
+                                          ctypes.c_char_p(bytes(previous_hash, 'ascii')),
+                                          ctypes.c_char_p(prefix),
+                                          prefix_len,
+                                          output)
+
+        return str(binascii.hexlify((output).raw)), nonce
 
 class SortedListSolver(ChallengeSolver):
     def __init__(self):
