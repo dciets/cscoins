@@ -15,6 +15,7 @@ class MinerClient(BaseClient):
         self.solvers = []
         self.solvers.append(ChallengeSolver.SortedListSolverNative(asc=True))
         self.solvers.append(ChallengeSolver.SortedListSolverNative(asc=False))
+        self.solvers.append(ChallengeSolver.ShortestPathSolverNative())
 
     async def client_loop(self):
         register_wallet = False
