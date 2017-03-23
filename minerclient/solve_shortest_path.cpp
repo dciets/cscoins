@@ -275,11 +275,11 @@ void solve_shortest_path_single(uint32_t grid_size, uint32_t nb_blockers, const 
     }
 
     for(uint32_t i = 0 ; i < nb_blockers ; i++) {
-      do {
-        generate_coordinate(prng, grid_size, x, y);
-      } while(grid[y][x] != ' ');
-
-      grid[y][x] = WALL;
+      generate_coordinate(prng, grid_size, x, y);
+      
+      if(grid[y][x] != ' ') {
+        grid[y][x] = WALL;
+      }
     }
 
     size_t last_write = buffer_size - 1;
