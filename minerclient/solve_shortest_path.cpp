@@ -168,20 +168,20 @@ void dijkstra_search(Grid& grid, uint32_t grid_size, Position const& start, Posi
       break;
     }
 
-    if(current.has_down(grid_size)) {
-      handle_next(grid, current, current.down(), cost_map, queue, came_from);
+     if(current.has_up()) {
+      handle_next(grid, current, current.up(), cost_map, queue, came_from);
     }
 
-    if(current.has_up()) {
-      handle_next(grid, current, current.up(), cost_map, queue, came_from);
+    if(current.has_left()) {
+      handle_next(grid, current, current.left(), cost_map, queue, came_from);
     }
 
     if(current.has_right(grid_size)) {
       handle_next(grid, current, current.right(), cost_map, queue, came_from);
     }
 
-    if(current.has_left()) {
-      handle_next(grid, current, current.left(), cost_map, queue, came_from);
+    if(current.has_down(grid_size)) {
+      handle_next(grid, current, current.down(), cost_map, queue, came_from);
     }
 
     queue.sort([&cost_map](Position const& a, Position const& b) {
@@ -236,7 +236,7 @@ void solve_shortest_path_single(const char* previous_hash, const unsigned char* 
   int nonce;
 
   do {
-    nonce = rand();
+    nonce = 78043384;
     int nonce_length;
     snprintf(hash_buffer + 64, 20, "%d%n", nonce, &nonce_length);
 
