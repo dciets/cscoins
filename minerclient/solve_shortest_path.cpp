@@ -188,7 +188,7 @@ void dijkstra_search(Grid& grid, uint32_t grid_size, Position const& start, Posi
   }
 }
 
-void generate_coordinate(std::mt19937& prng, uint32_t grid_size, uint32_t& x, uint32_t& y) {
+void generate_coordinate(std::mt19937_64& prng, uint32_t grid_size, uint32_t& x, uint32_t& y) {
   //The server implementation generates the y coordinate first, then the x coordinate.
   y = prng() % grid_size;
   x = prng() % grid_size;
@@ -215,7 +215,7 @@ std::mutex mut;
 void solve_shortest_path_single(uint32_t grid_size, uint32_t nb_blockers, const char* previous_hash, const unsigned char* prefix, size_t prefix_len, unsigned char hash[32], int thread_num) {
   srand(time(nullptr));
 
-  std::mt19937 prng;
+  std::mt19937_64 prng;
   char hash_buffer[84];
   strncpy(hash_buffer, previous_hash, 64);
 
