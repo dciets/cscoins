@@ -9,6 +9,8 @@
 #include <thread>
 #include <unistd.h>
 
+#include "solve_utils.hpp"
+
 #define NB_THREADS 8
 
 struct greater
@@ -38,12 +40,10 @@ uint64_t seed_from_hash(const char *previous_hash, uint64_t nonce) {
 
 
 extern "C" {
-  int solve_sorted_list_single(const char * previous_hash, int nb_elements, const unsigned char *prefix, int prefix_len, bool asc, unsigned char *winning_hash, bool *done, uint64_t *found_nonce) {
+  int solve_sorted_list_single(const char * previous_hash, const unsigned char *prefix, int prefix_len, int nb_elements, bool asc, unsigned char *winning_hash, bool *done, uint64_t *found_nonce) {
     std::mt19937_64 prng;
     int nonce = rand() & 134217727;
     uint64_t seed;
-    int i;
-    int n;
     std::string buf;
     SHA256_CTX sha256;
     unsigned char hash[SHA256_DIGEST_LENGTH];
@@ -90,15 +90,16 @@ extern "C" {
       nonce = rand() & 134217727;
     }
 
+    return -1;
   }
 
-  int solve_sorted_list(const char * previous_hash, int nb_elements, const unsigned char *prefix, int prefix_len, bool asc, unsigned char *winning_hash) {
+  int solve_sorted_list(const char * previous_hash, const unsigned char *prefix, int prefix_len, int nb_elements, bool asc, unsigned char* winning_hash) {
     std::thread threads[NB_THREADS];
     bool done = false;
     uint64_t nonce;
 
     for(int i = 0; i < NB_THREADS; i++) {
-      threads[i] = std::thread(solve_sorted_list_single, previous_hash, nb_elements, prefix, prefix_len, asc, winning_hash, &done, &nonce);
+      threads[i] = std::thread(solve_sorted_list_single, previous_hash, prefix, prefix_len, nb_elements, asc, winning_hash, &done, &nonce);
     }
 
     while(!done) {
@@ -111,4 +112,32 @@ extern "C" {
 
     return nonce;
   }
+}
+
+int main(int argc, char* argv[]) {
+  const char* previous_hash;
+  int nb_elements;
+  const char* prefix;
+  bool asc;
+
+  if(argc != 5) {
+    return 1;
+  }
+
+  previous_hash = argv[1];
+  prefix = argv[2];
+  nb_elements = std::atoi(argv[3]);
+  asc = std::atoi(argv[4]) != 0;
+
+  size_t prefix_len = strlen(prefix) / 2;
+  unsigned char prefix_bytes[prefix_len];
+
+  hex_to_bytes(prefix, prefix_bytes);
+
+  unsigned char winning_hash[32];
+  int nonce = solve_sorted_list(previous_hash, prefix_bytes, prefix_len, nb_elements, asc, winning_hash);
+  print_bytes_hex(winning_hash, 32);
+  std::cout << "\n" << nonce << std::endl;
+
+  return 0;
 }

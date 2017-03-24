@@ -3,10 +3,7 @@ import hashlib
 import random
 import ctypes
 import binascii
-
-solve_lib = ctypes.cdll.LoadLibrary('./solve.so')
-native_solve_sorted_list = solve_lib.solve_sorted_list
-native_sort_shortest_path = solve_lib.solve_shortest_path
+import subprocess
 
 class ChallengeSolver:
     def __init__(self, challenge_name):
@@ -37,18 +34,10 @@ class SortedListSolverNative(ChallengeSolver):
     def solve(self, parameters, hash_prefix, previous_hash):
         nb_elements = parameters['nb_elements']
 
-        prefix = bytes.fromhex(hash_prefix)
-        prefix_len = len(prefix)
+        proc = subprocess.Popen(["./sorted_list.solver", previous_hash, hash_prefix, str(nb_elements), str(self.asc)], stdout=subprocess.PIPE)
+        output = proc.communicate()[0].splitlines()
 
-        output = ctypes.create_string_buffer(32)
-        nonce = native_solve_sorted_list(ctypes.c_char_p(bytes(previous_hash, 'ascii')),
-                                         nb_elements,
-                                         ctypes.c_char_p(prefix),
-                                         prefix_len,
-                                         self.asc,
-                                         output)
-
-        return str(binascii.hexlify((output).raw)), nonce
+        return output[0].decode("utf-8"), int(output[1])
 
 class ShortestPathSolverNative(ChallengeSolver):
     def __init__(self):
@@ -57,17 +46,11 @@ class ShortestPathSolverNative(ChallengeSolver):
     def solve(self, parameters, hash_prefix, previous_hash):
         grid_size = parameters['grid_size']
         nb_blockers = parameters['nb_blockers']
-        prefix = bytes.fromhex(hash_prefix)
-        prefix_len = len(prefix)
-        output = ctypes.create_string_buffer(32)
-        nonce = native_sort_shortest_path(grid_size,
-                                          nb_blockers,
-                                          ctypes.c_char_p(bytes(previous_hash, 'ascii')),
-                                          ctypes.c_char_p(prefix),
-                                          prefix_len,
-                                          output)
 
-        return str(binascii.hexlify((output).raw)), nonce
+        proc = subprocess.Popen(["./shortest_path.solver", previous_hash, hash_prefix, str(grid_size), str(nb_blockers)], stdout=subprocess.PIPE)
+        output = proc.communicate()[0].splitlines()
+
+        return output[0].decode("utf-8"), int(output[1])
 
 class SortedListSolver(ChallengeSolver):
     def __init__(self):

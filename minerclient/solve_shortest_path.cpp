@@ -12,6 +12,8 @@
 
 #include <openssl/sha.h>
 
+#include "solve_utils.hpp"
+
 struct Position {
   uint32_t x, y;
 
@@ -212,7 +214,7 @@ int winning_thread = -1;
 std::condition_variable condition;
 std::mutex mut;
 
-void solve_shortest_path_single(uint32_t grid_size, uint32_t nb_blockers, const char* previous_hash, const unsigned char* prefix, size_t prefix_len, unsigned char hash[32], int thread_num) {
+void solve_shortest_path_single(const char* previous_hash, const unsigned char* prefix, size_t prefix_len, uint32_t grid_size, uint32_t nb_blockers, unsigned char hash[32], int thread_num) {
   srand(time(nullptr));
 
   std::mt19937_64 prng;
@@ -315,13 +317,13 @@ void solve_shortest_path_single(uint32_t grid_size, uint32_t nb_blockers, const 
 }
 
 extern "C" {
-  int solve_shortest_path(uint32_t grid_size, uint32_t nb_blockers, const char* previous_hash, const unsigned char* prefix, size_t prefix_len, unsigned char* winning_hash) {
+  int solve_shortest_path(const char* previous_hash, const unsigned char* prefix, size_t prefix_len, uint32_t grid_size, uint32_t nb_blockers, unsigned char* winning_hash) {
     constexpr size_t NO_THREADS = 8;
     std::thread threads[NO_THREADS];
     unsigned char hashes[NO_THREADS][32];
 
     for(size_t i = 0 ; i < NO_THREADS ; i++) {
-      threads[i] = std::thread(solve_shortest_path_single, grid_size, nb_blockers, previous_hash, prefix, prefix_len, hashes[i], i);
+      threads[i] = std::thread(solve_shortest_path_single, previous_hash, prefix, prefix_len, grid_size, nb_blockers, hashes[i], i);
     }
 
     {
@@ -336,4 +338,30 @@ extern "C" {
     memcpy(winning_hash, hashes[winning_thread], 32);
     return winning_nonce;
   }
+}
+
+int main(int argc, char* argv[]) {
+  uint32_t grid_size, nb_blockers;
+  const char* previous_hash;
+  const char* prefix;
+
+  if(argc != 5) {
+    return 1;
+  }
+
+  previous_hash = argv[1];
+  prefix = argv[2];
+  grid_size = std::atoi(argv[3]);
+  nb_blockers = std::atoi(argv[4]);
+
+  size_t prefix_len = strlen(prefix) / 2;
+  unsigned char prefix_bytes[prefix_len];
+  hex_to_bytes(prefix, prefix_bytes);
+
+  unsigned char winning_hash[32];
+  int nonce = solve_shortest_path(previous_hash, prefix_bytes, prefix_len, grid_size, nb_blockers, winning_hash);
+  print_bytes_hex(winning_hash, 32);
+  std::cout << "\n" << nonce << std::endl;
+
+  return 0;
 }
