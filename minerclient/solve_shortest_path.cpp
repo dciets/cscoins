@@ -214,11 +214,11 @@ int winning_thread = -1;
 std::condition_variable condition;
 std::mutex mut;
 
-void solve_shortest_path_single(const char* previous_hash, const unsigned char* prefix, size_t prefix_len, uint32_t grid_size, uint32_t nb_blockers, unsigned char hash[32], int thread_num) {
-  std::mt19937_64 rng(time(NULL));
+void solve_shortest_path_single(const char* previous_hash, const unsigned char* prefix, size_t prefix_len, uint32_t grid_size, uint32_t nb_blockers, unsigned char hash[32], int startSeed, int thread_num) {
+  std::mt19937_64 prng;
+  prng.seed(startSeed);
   std::uniform_int_distribution<int> gen(0, 134217727);
 
-  std::mt19937_64 prng;
   char hash_buffer[84];
   strncpy(hash_buffer, previous_hash, 64);
 
@@ -237,7 +237,7 @@ void solve_shortest_path_single(const char* previous_hash, const unsigned char* 
   int nonce;
 
   do {
-    nonce = gen(rng);
+    nonce = gen(prng);
     int nonce_length;
     snprintf(hash_buffer + 64, 20, "%d%n", nonce, &nonce_length);
 
@@ -323,8 +323,10 @@ extern "C" {
     std::thread threads[NO_THREADS];
     unsigned char hashes[NO_THREADS][32];
 
+    srand(time(NULL));
+
     for(size_t i = 0 ; i < NO_THREADS ; i++) {
-      threads[i] = std::thread(solve_shortest_path_single, previous_hash, prefix, prefix_len, grid_size, nb_blockers, hashes[i], i);
+      threads[i] = std::thread(solve_shortest_path_single, previous_hash, prefix, prefix_len, grid_size, nb_blockers, hashes[i], rand(), i);
     }
 
     {
