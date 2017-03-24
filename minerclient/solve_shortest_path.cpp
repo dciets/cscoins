@@ -215,7 +215,8 @@ std::condition_variable condition;
 std::mutex mut;
 
 void solve_shortest_path_single(const char* previous_hash, const unsigned char* prefix, size_t prefix_len, uint32_t grid_size, uint32_t nb_blockers, unsigned char hash[32], int thread_num) {
-  srand(time(nullptr));
+  std::mt19937_64 rng(time(NULL));
+  std::uniform_int_distribution<int> gen(0, 134217727);
 
   std::mt19937_64 prng;
   char hash_buffer[84];
@@ -236,7 +237,7 @@ void solve_shortest_path_single(const char* previous_hash, const unsigned char* 
   int nonce;
 
   do {
-    nonce = 78043384;
+    nonce = gen(rng);
     int nonce_length;
     snprintf(hash_buffer + 64, 20, "%d%n", nonce, &nonce_length);
 
