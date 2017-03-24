@@ -1,5 +1,8 @@
 import json
 import os
+import sys
+# import crypto
+# sys.modules['Crypto'] = crypto
 import ChallengeSolver
 import time
 from Crypto.Hash import SHA256

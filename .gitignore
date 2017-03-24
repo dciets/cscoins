@@ -1,5 +1,4 @@
 *.so
 *.pyc
-*.priv
-*.pub
 *.solver
+__pycache__

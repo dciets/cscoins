@@ -55,6 +55,7 @@ class BaseClient:
         hasher = SHA256.new()
         hasher.update(self.public_key.exportKey(format='DER'))
         self.wallet_id = hasher.hexdigest()
+        print(self.wallet_id)
 
     async def connect(self):
         if self.ssl:
