@@ -114,11 +114,15 @@ uint32_t num_digits(uint32_t n) {
 }
 
 void build_path(ParentMap const& came_from, Position const& current, char* str, size_t& last_write) {
-  //snprintf will print a null byte over str[last_write], so save it and put it back in later
   char end_char = str[last_write];
   size_t no_chars = num_digits(current.y) + num_digits(current.x);
   size_t str_start = last_write - no_chars;
-  snprintf(str + str_start, no_chars + 1, "%d%d", current.y, current.x);
+  char* temp = (char *) malloc( (unsigned) (strlen(str) + no_chars)*sizeof(char *) ) ;
+
+   sprintf(temp, "%d%d", current.y, current.x, str);
+  strcat(temp, str) ;
+  strcpy(str, temp) ;
+  free(temp);
   str[last_write] = end_char;
   last_write = str_start;
 
@@ -134,12 +138,12 @@ void handle_next(Grid& grid, Position const& current, Position const& next, Scor
   }
 
   uint32_t next_cost = cost_map[current] + 1;
-
   auto it = cost_map.find(next);
   if(it == cost_map.end()) {
     cost_map[next] = next_cost;
   } else if(next_cost < it->second) {
     it->second = next_cost;
+
   } else {
     return;
   }
@@ -168,8 +172,12 @@ void dijkstra_search(Grid& grid, uint32_t grid_size, Position const& start, Posi
       break;
     }
 
-     if(current.has_up()) {
+    if(current.has_up()) {
       handle_next(grid, current, current.up(), cost_map, queue, came_from);
+    }
+
+    if(current.has_left()) {
+      handle_next(grid, current, current.left(), cost_map, queue, came_from);
     }
 
     if(current.has_left()) {
@@ -213,6 +221,7 @@ int winning_nonce = -1;
 int winning_thread = -1;
 std::condition_variable condition;
 std::mutex mut;
+<<<<<<< HEAD
 
 void solve_shortest_path_single(const char* previous_hash, const unsigned char* prefix, size_t prefix_len, uint32_t grid_size, uint32_t nb_blockers, unsigned char hash[32], int startSeed, int thread_num) {
   std::mt19937_64 prng;
@@ -232,12 +241,35 @@ void solve_shortest_path_single(const char* previous_hash, const unsigned char* 
 
   SHA256_CTX sha256;
 
+=======
+void solve_shortest_path_single(uint32_t grid_size, uint32_t nb_blockers, const char* previous_hash, const unsigned char* prefix, size_t prefix_len, unsigned char hash[32], int thread_num) {
+  std::mt19937_64 rng(time(NULL));
+  std::uniform_int_distribution<int> gen(0, 92146071);
+
+  std::mt19937_64 prng;
+>>>>>>> fixed shortest_path
   bool solution_found = false;
   bool need_exit = false;
   int nonce;
 
   do {
+<<<<<<< HEAD
     nonce = gen(prng);
+=======
+    char hash_buffer[84];
+    strncpy(hash_buffer, previous_hash, 64);
+    //A buffer size of 10 megabytes ought to be enough to contain our result string...
+    constexpr size_t buffer_size = 10 * 1024 * 1024;
+    char* buffer = new char[buffer_size];
+    buffer[buffer_size - 1] = 0;
+
+    //Make sure it gets deleted ;)
+    std::unique_ptr<char> buffer_ptr(buffer);
+
+    SHA256_CTX sha256;
+
+    nonce = gen(rng);
+>>>>>>> fixed shortest_path
     int nonce_length;
     snprintf(hash_buffer + 64, 20, "%d%n", nonce, &nonce_length);
 
@@ -290,9 +322,12 @@ void solve_shortest_path_single(const char* previous_hash, const unsigned char* 
     size_t solution_length = buffer_size - 1 - last_write;
 
     if(solution_length > 0) {
-      SHA256_Init(&sha256);
-      SHA256_Update(&sha256, buffer + last_write, solution_length);
-      SHA256_Final(hash, &sha256);
+      std::string solution_string(buffer);
+solution_string.pop_back();
+      SHA256_CTX shaCompare;
+      SHA256_Init(&shaCompare);
+      SHA256_Update(&shaCompare, buffer, solution_length);
+      SHA256_Final(hash, &shaCompare);
 
       if(memcmp(hash, prefix, prefix_len) == 0) {
         solution_found = true;
