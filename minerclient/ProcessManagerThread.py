@@ -1,22 +1,34 @@
+import asyncio
+import ChallengeSolver
 import json
 import os
-import ChallengeSolver
+import threading
 import time
 from Crypto.Hash import SHA256
 from coinslib import BaseClient
 from coinslib import Challenge
 
-from ProcessManagerThread import ProcessManagerThread
+from ProcessThread import ProcessThread
 
-class MinerClient(BaseClient):
+class ProcessManagerThread(BaseClient, threading.Thread):
     def __init__(self, key_dirs="", hostname="localhost", port=8989, ssl=False):
         BaseClient.__init__(self, hostname, port, ssl)
+        threading.Thread.__init__(self)
+
         self.keys_dir = key_dirs
         self.time_limit = 0
-        self.solvers = []
-        self.solvers.append(ChallengeSolver.SortedListSolverNative(asc=True))
-        self.solvers.append(ChallengeSolver.SortedListSolverNative(asc=False))
-        self.solvers.append(ChallengeSolver.ShortestPathSolverNative())
+        self.solvers = {}
+        self.solvers["sorted_list"] = ChallengeSolver.SortedListSolverNative(asc=True)
+        self.solvers["reverse_sorted_list"] = ChallengeSolver.SortedListSolverNative(asc=False)
+        self.solvers["shortest_path"] = ChallengeSolver.ShortestPathSolverNative()
+
+        self.lock = threading.Lock()
+        self.e = threading.Event()
+        self.next_challenge = None
+
+    def run(self):
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        asyncio.get_event_loop().run_until_complete(self.client_loop())
 
     async def client_loop(self):
         register_wallet = False
@@ -62,33 +74,34 @@ class MinerClient(BaseClient):
 
         await self.mine_loop()
 
-    async def wait_receive(self):
-        message = await self.socket.recv()
-        data = json.loads(message)
-        return data
-
     async def mine_loop(self):
-        manager_thread = ProcessManagerThread(self.keys_dir, self.hostname, self.port, self.ssl)
-        manager_thread.start()
-        previous_challenge = None
-        current_challenge = None
-        response = None
+        proc_thread = None
+        proc = None
 
         while True:
-            response = await self.get_current_challenge()
-            current_challenge = Challenge()
+            self.e.wait()
+            self.e.clear()
 
-            try:
-                current_challenge.fill_from_challenge(response)
-                self.time_limit = int(time.time()) + int(response['time_left'])
-            except:
-                continue
+            self.lock.acquire()
 
-            if previous_challenge is None or current_challenge.id != previous_challenge.id:
-                previous_challenge = current_challenge
-                manager_thread.lock.acquire()
-                manager_thread.next_challenge = current_challenge
-                manager_thread.lock.release()
-                manager_thread.e.set()
+            if self.next_challenge is not None:
+                if proc is not None:
+                    proc.kill()
+                    proc = None
+                    proc_thread = None
 
-            time.sleep(15)
+                if self.next_challenge.challenge_name in self.solvers:
+                    print("Searching for a hash matching : {0}".format(self.next_challenge.hash_prefix))
+
+                    proc_thread = ProcessThread(self.solvers[self.next_challenge.challenge_name], self.next_challenge, self.e)
+                    proc_thread.start()
+
+            elif proc is not None:
+                if proc_thread.success:
+                    print("Result -- Hash: {}\nResult -- Nonce: {}".format(proc_thread.hash, proc_thread.nonce))
+                    await self.submit(current_challenge.id, proc_thread.hash, proc_thread.nonce)
+
+                proc = None
+                proc_thread = None
+
+            self.lock.release()
