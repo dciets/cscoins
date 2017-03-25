@@ -38,11 +38,12 @@ class MinerClient(BaseClient):
             self.export_keys(pub_path, priv_path)
             register_wallet = True
 
+        print("WERWERWER")
         # generating wallet id
         self.generate_wallet_id()
 
         await self.connect()
-
+print("WERWERWER")
         if register_wallet:
             # create the wallet
             keyString = ""
