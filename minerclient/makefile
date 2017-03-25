@@ -2,13 +2,13 @@ CC := gcc # This is the main compiler
 SRCDIR := src
 BUILDDIR := build
 TARGET := client
- 
+
 SRCEXT := c
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 debug: CFLAGS := -g -Wall
 release: CFLAGS := -O3
-LIB := -pthread -lcheck_pic -pthread -lrt -lm -lsubunit -lssl -lcrypto
+LIB := -pthread -pthread -lrt
 INC := -I include
 
 release: $(TARGET)
@@ -19,7 +19,7 @@ debug: $(TARGET)
 
 all: $(TARGET)
 	@echo "Done!"
-    
+
 $(TARGET): $(OBJECTS)
 	@echo "Linking..."
 	@echo "$(CC) $^ -o $(TARGET) $(LIB)"; $(CC) $^ -o $(TARGET) $(LIB)
@@ -29,8 +29,7 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@echo "$(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
 clean:
-	@echo "Cleaning..."; 
+	@echo "Cleaning...";
 	@echo "$(RM) -r $(BUILDDIR) $(TARGET)"; $(RM) -r $(BUILDDIR) $(TARGET)
 
 .PHONY: clean
-
