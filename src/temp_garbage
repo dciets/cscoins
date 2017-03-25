@@ -1,0 +1,376 @@
+#include <CSShortestPath.h>
+#include <sha2.h>
+#include <MT19937-64.h>
+
+/*
+    start->y = 3;
+    start->x = 7;
+    
+    grid[3 * size + 6].y = 3;
+    grid[3 * size + 6].x = 6;
+    start->path = &(grid[3 * size + 6]);
+
+    grid[3 * size + 5].y = 3;
+    grid[3 * size + 5].x = 5;
+    grid[3 * size + 6].path = &(grid[3 * size + 5]);
+
+    grid[3 * size + 4].y = 3;
+    grid[3 * size + 4].x = 4;
+    grid[3 * size + 5].path = &(grid[3 * size + 4]);
+    
+    grid[4 * size + 4].y = 4;
+    grid[4 * size + 4].x = 4;
+    grid[3 * size + 4].path = &(grid[4 * size + 4]);
+
+    grid[5 * size + 4].y = 5;
+    grid[5 * size + 4].x = 4;
+    grid[4 * size + 4].path = &(grid[5 * size + 4]);
+   
+    end->y = 6;
+    end->x = 4;
+    grid[5 * size + 4].path = end;
+    */
+
+
+void push_fifo(Node* node, NodeFIFO* fifo)
+{
+    node->tail = node;
+    fifo->tail = node;
+}
+
+void update_node(Node* from, Node* to, NodeFIFO* fifo)
+{
+    if (to->val != WALL && to->path == NULL) {
+        to->path = from;
+        push_fifo(to, fifo);
+    }
+}
+
+void pop_fifo(NodeFIFO* fifo)
+{
+    Node* tmp = fifo->head;
+    fifo->head = fifo->head->tail;
+    tmp->tail = NULL;
+}
+
+void update_neighbors(NodeFIFO* fifo, Node** grid)
+{
+    int x = fifo->head->x;
+    int y = fifo->head->y;
+
+    update_node(&(grid[y][x]), &(grid[y+1][x]), fifo);
+    update_node(&(grid[y][x]), &(grid[y-1][x]), fifo);
+    update_node(&(grid[y][x]), &(grid[y][x+1]), fifo);
+    update_node(&(grid[y][x]), &(grid[y][x-1]), fifo);
+
+    pop_fifo(fifo);
+}
+
+int reverse_path(char* buffer, Node* node)
+{
+    int index = 0;
+    while(node != NULL) {
+        index += uint64_to_ascii(node->y, &buffer[index]);
+        index += uint64_to_ascii(node->x, &buffer[index]);
+        node = node->path;
+    }
+    return index;
+}
+
+void test(Node** grid, int size)
+{
+    int i = 0, j = 0;
+
+    grid = malloc(size * sizeof(Node*));
+
+    for (i = 0; i < size; i++) {
+        grid[i] = malloc(size * sizeof(Node));
+    }
+
+    for (i = 0; i < size; i++) {
+        for (j = 0; j < size; j++) {
+            if (i == 0 || i == size-1 || j == 0 || j == size-1) {
+                grid[i][j].val = WALL;
+            } else {
+                grid[i][j].y = i;
+                grid[i][j].x = j;
+                grid[i][j].val = FREE;
+            }
+            printf("%c", grid[i][j].val);
+        }
+    }
+/*
+    int i, j;
+
+    grid = malloc(size * sizeof(Node*));
+    for (i = 0; i < size; i++) {
+        grid[i] = malloc(size * sizeof(Node));
+        for (j = 0; j < size; j++)
+        {
+            if (i == 0 || i == size-1 || j == 0 || j == size-1) {
+                grid[i][j].val = WALL;
+            } else {
+                grid[i][j].y = i;
+                grid[i][j].x = j;
+                grid[i][j].val = FREE;
+                printf("%d\n", grid[i][j].x);
+            }
+        }
+    }
+*/
+}
+
+void print_grid(Node** grid, int size)
+{
+    int i, j;
+    for (i = 0; i < size; i++) {
+        for (j = 0; j < size; j++) {
+            printf(" %c ", grid[i][j].val);
+        }
+        printf("\n");
+        printf("\n");
+    }
+}
+
+// nb_blockers = 80
+// grid_size = 25
+// id = 431
+// hash = 02d7
+// last_solution: 79c61671b2453153282ed4db092d87716582b9acf5752b5a08bcf2b9d961d234
+
+// answer: 7144700827
+// hash: 02d7a60f8c5cdafffdb097df956fa1880c228d77f34c2b808aa91d31fe583026
+void print_val(int val)
+{
+    printf("%d\n", val);
+    printf("\n");
+    printf("\n");
+}
+
+void print_1darray(int my1darray[])
+{
+    
+    int i = 0;
+    for (i = 0; i < 10; i++) {
+        my1darray[i] = i;
+        printf("%d ", my1darray[i]);
+    }
+    printf("\n");
+    printf("\n");
+    printf("\n");
+}
+
+void print_2darray(int _2darr[],  int size)
+{
+    int i = 0, j = 0;
+    for (i = 0; i < size; i++) {
+        for (j = 0; j < size; j++) {
+            _2darr[i * size + j] = i+j;
+            printf("%d\t", _2darr[i * size + j]);
+        }
+        printf("\n");
+    }
+}
+
+void* CSShortestPath_solve(void* args)
+{
+    int size = 10;
+    int val = 5;
+    printf("%d\n", val);
+    printf("\n");
+    printf("\n");
+    print_val(val);
+
+    int my1darray[10];
+    int i = 0;
+    for (i = 0; i < size; i++) {
+        my1darray[i] = i;
+        printf("%d ", my1darray[i]);
+    }
+    printf("\n");
+    printf("\n");
+    printf("\n");
+    print_1darray(my1darray);
+
+    int my2darray[10][10];
+    int j = 0;
+    for (i = 0; i < size; i++) {
+        for (j = 0; j < size; j++) {
+            my2darray[i][j] = i+j;
+            printf("%d\t", my2darray[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+    printf("\n");
+    print_2darray(my2darray, size);
+    printf("\n");
+    printf("\n");
+
+    int** dyn2darray = malloc(size * sizeof(int*));
+    for (i = 0; i < size; i++) {
+        dyn2darray[i] = malloc(size * sizeof(int));
+    }
+
+    printf("\n");
+    printf("\n");
+    print_2darray(dyn2darray, size);
+    
+    return NULL;
+
+    /*
+
+    grid[2][2].val = WALL;
+    grid[3][4].val = WALL;
+    grid[4][5].val = WALL;
+    grid[5][4].val = WALL;
+    grid[6][5].val = WALL;
+    printf("4\n");
+
+    end = &(grid[5][3]);
+    grid[5][3].val = END;
+    printf("5\n");
+    
+    fifo.head = end;
+    while(start->path == NULL && fifo.head != NULL) {
+        printf("6\n");
+        update_neighbors(&fifo, grid);
+        printf("7\n");
+    }
+    printf("8\n");
+
+    int nBytes = reverse_path(path_str, start);
+    printf("%s\n", path_str);
+*/
+
+    //grid_free(grid, size);
+
+    /*
+    ThreadArgs* threadArgs = (ThreadArgs*)args;
+    int size = threadArgs->challenge->grid_size;
+    int nb_blockers = threadArgs->challenge->nb_blockers;
+    unsigned char nonce[NONCE_MAX_SIZE];
+    unsigned char digest[SHA256_HASH_SIZE];
+    char prefix[HASH_PREFIX_SIZE] = "";
+    char path_str[1024] = "";
+    MT1993764_ctx prng_ctx;
+    sha256_ctx sha_ctx;
+    int nonce_len = 0;
+    uint64_t* seed;
+    NodeFIFO fifo;
+    Node** grid;
+    Node* start;
+    Node* end;
+    int posX;
+    int posY;
+
+    // pre-calculate the first hash midstate
+    sha256_init(&sha_ctx);
+    sha256_update(&sha_ctx, threadArgs->challenge->last_hash, SHA256_HASH_SIZE);
+
+    grid_init(grid, size);
+    
+
+    while(!threadArgs->challenge->skip_challenge &&
+          memcmp(prefix, threadArgs->challenge->hash_prefix, HASH_PREFIX_SIZE) != 0)
+    {   
+        sha256_ctx sha2_ctx_copy = sha_ctx;
+
+        nonce_len = uint64_to_ascii(threadArgs->counter++, nonce);
+        sha256_update(&sha2_ctx_copy, nonce, nonce_len);
+        sha256_final(&sha2_ctx_copy, digest);
+        seed = (uint64_t*)&digest[0];
+        MT1993764_initialize(&prng_ctx, *seed);
+
+        posY = MT1993764_extractU64(&prng_ctx) % size;
+        posX = MT1993764_extractU64(&prng_ctx) % size;
+        while (grid[posX][posY].val != FREE) {
+            posY = MT1993764_extractU64(&prng_ctx) % size;
+            posX = MT1993764_extractU64(&prng_ctx) % size;
+        }
+        grid[posY][posX].val = START;
+        start = &(grid[posY][posX]);
+
+        posY = MT1993764_extractU64(&prng_ctx) % size;
+        posX = MT1993764_extractU64(&prng_ctx) % size;
+        while (grid[posX][posY].val != FREE) {
+            posY = MT1993764_extractU64(&prng_ctx) % size;
+            posX = MT1993764_extractU64(&prng_ctx) % size;
+        }
+        grid[posY][posX].val = END;
+        end = &(grid[posY][posX]);
+
+        int i = 0;
+        for (i = 0; i < nb_blockers; i++) {
+            posY = MT1993764_extractU64(&prng_ctx) % size;
+            posX = MT1993764_extractU64(&prng_ctx) % size;
+            if (grid[posY][posX].val != FREE) {
+                grid[posY][posX].val = WALL;
+            }
+        }
+
+        start = &(grid[2][1]);
+        grid[2][1].val = START;
+
+        grid[2][2].val = WALL;
+        grid[3][4].val = WALL;
+        grid[4][5].val = WALL;
+        grid[5][4].val = WALL;
+        grid[6][5].val = WALL;
+
+        end = &(grid[5][3]);
+        grid[5][3].val = END;
+        
+        fifo.head = end;
+        while(start->path == NULL && fifo.head != NULL) {
+            update_neighbors(&fifo, grid);
+        }
+
+        int nBytes = reverse_path(path_str, start);
+        if (nBytes > 0) {
+            sha256(path_str, nBytes, path_str);
+            printf("%s\n", path_str);
+            bin2hex(path_str, prefix, HASH_PREFIX_SIZE);
+        }
+    }
+
+    grid_free(grid, size);
+        */
+}
+
+void grid_init(Node** grid, int size)
+{
+    int i = 0, j = 0;
+
+    //grid = calloc(size, sizeof(Node*));
+    if ((grid = malloc(size * sizeof(Node*))) == NULL)
+        printf("something wrong happened\n");
+
+    for (i = 0; i < size; i++)
+    {
+        //grid[i] = calloc(size, sizeof(Node));
+        if ((grid[i] = malloc(size * sizeof(Node))) == NULL)
+            printf("something wrong happened2\n");
+
+        for (j = 0; j < size; j++)
+        {
+            if (i == 0 || i == size-1 || j == 0 || j == size-1) {
+                grid[i][j].val = WALL;
+                printf("0x%X\n", grid[i][j]);
+            } else {
+                printf("0x%X\n", grid[i][j]);
+                grid[i][j].y = i;
+                grid[i][j].x = j;
+                grid[i][j].val = FREE;
+            }
+        }
+    }  
+}
+
+void grid_free(Node** grid, int size)
+{
+    int i = 0;
+    for (i = 0; i < size; i++)
+        free(grid[i]);
+    free(grid);
+}
