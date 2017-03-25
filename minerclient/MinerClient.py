@@ -25,7 +25,6 @@ class MinerClient(BaseClient):
         register_wallet = False
         pub_path = "key.pub"
         priv_path = "key.priv"
-        print("WERWERzzz")
 
         if len(self.keys_dir) > 0:
             pub_path = os.path.join(self.keys_dir, pub_path)
@@ -39,12 +38,10 @@ class MinerClient(BaseClient):
             self.export_keys(pub_path, priv_path)
             register_wallet = True
 
-        print("WERWERWER")
         # generating wallet id
         self.generate_wallet_id()
 
         await self.connect()
-        print("WERWERWER")
         if register_wallet:
             # create the wallet
             keyString = ""
