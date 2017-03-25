@@ -25,6 +25,7 @@ class MinerClient(BaseClient):
         register_wallet = False
         pub_path = "key.pub"
         priv_path = "key.priv"
+        print("WERWERzzz")
 
         if len(self.keys_dir) > 0:
             pub_path = os.path.join(self.keys_dir, pub_path)
