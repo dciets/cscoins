@@ -58,7 +58,7 @@ class MinerClient(BaseClient):
             await self.socket.send(message)
             message = await self.socket.recv()
             response = json.loads(message)
-
+            print(response)
             if response['success']:
                 print("Wallet created : {}".format(response["wallet_id"]))
                 return
