@@ -221,7 +221,6 @@ int winning_nonce = -1;
 int winning_thread = -1;
 std::condition_variable condition;
 std::mutex mut;
-<<<<<<< HEAD
 
 void solve_shortest_path_single(const char* previous_hash, const unsigned char* prefix, size_t prefix_len, uint32_t grid_size, uint32_t nb_blockers, unsigned char hash[32], int startSeed, int thread_num) {
   std::mt19937_64 prng;
@@ -241,35 +240,12 @@ void solve_shortest_path_single(const char* previous_hash, const unsigned char* 
 
   SHA256_CTX sha256;
 
-=======
-void solve_shortest_path_single(uint32_t grid_size, uint32_t nb_blockers, const char* previous_hash, const unsigned char* prefix, size_t prefix_len, unsigned char hash[32], int thread_num) {
-  std::mt19937_64 rng(time(NULL));
-  std::uniform_int_distribution<int> gen(0, 92146071);
-
-  std::mt19937_64 prng;
->>>>>>> fixed shortest_path
   bool solution_found = false;
   bool need_exit = false;
   int nonce;
 
   do {
-<<<<<<< HEAD
     nonce = gen(prng);
-=======
-    char hash_buffer[84];
-    strncpy(hash_buffer, previous_hash, 64);
-    //A buffer size of 10 megabytes ought to be enough to contain our result string...
-    constexpr size_t buffer_size = 10 * 1024 * 1024;
-    char* buffer = new char[buffer_size];
-    buffer[buffer_size - 1] = 0;
-
-    //Make sure it gets deleted ;)
-    std::unique_ptr<char> buffer_ptr(buffer);
-
-    SHA256_CTX sha256;
-
-    nonce = gen(rng);
->>>>>>> fixed shortest_path
     int nonce_length;
     snprintf(hash_buffer + 64, 20, "%d%n", nonce, &nonce_length);
 

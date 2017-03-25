@@ -11,6 +11,7 @@ RUN pip3 install asyncio
 RUN pip3 install pycrypto
 RUN git clone https://f5be9eb9ff8353cb816eb736fa5936cffddea92d@github.com/dciets/cscoins.git
 WORKDIR cscoins/minerclient/
+run git fetch
 run git checkout add-dockerfile2
 run make
 ENTRYPOINT python3 main.py
