@@ -43,7 +43,7 @@ class MinerClient(BaseClient):
         self.generate_wallet_id()
 
         await self.connect()
-print("WERWERWER")
+        print("WERWERWER")
         if register_wallet:
             # create the wallet
             keyString = ""
